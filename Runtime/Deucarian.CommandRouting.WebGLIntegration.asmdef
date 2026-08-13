@@ -1,0 +1,19 @@
+{
+  "name": "Deucarian.CommandRouting.WebGLIntegration",
+  "rootNamespace": "Deucarian.CommandRouting.WebGLIntegration",
+  "references": [
+    "Deucarian.CommandRouting",
+    "Deucarian.Diagnostics",
+    "Deucarian.Logging",
+    "Newtonsoft.Json"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Deucarian WebGL Command Harness</title>
+  <style>
+    :root { color-scheme: dark; font: 15px/1.5 system-ui, sans-serif; }
+    body { margin: 0; background: #111827; color: #e5e7eb; }
+    main { display: grid; grid-template-columns: minmax(360px, 1fr) 320px; gap: 16px; padding: 16px; min-height: calc(100vh - 32px); }
+    iframe, section { border: 1px solid #334155; border-radius: 14px; background: #0f172a; }
+    iframe { width: 100%; min-height: 70vh; }
+    section { padding: 16px; }
+    button { width: 100%; margin: 5px 0; padding: 10px; border: 0; border-radius: 9px; background: #2563eb; color: white; cursor: pointer; }
+    button.secondary { background: #334155; }
+    pre { min-height: 180px; overflow: auto; white-space: pre-wrap; color: #93c5fd; }
+    small { color: #94a3b8; }
+    @media (max-width: 760px) { main { grid-template-columns: 1fr; } iframe { min-height: 55vh; } }
+  </style>
+</head>
+<body>
+<main>
+  <iframe id="viewer" title="Unity WebGL viewer"></iframe>
+  <section>
+    <h1>Command harness</h1>
+    <small>No credentials are stored. Pass a local build URL as <code>?viewer=...</code>.</small>
+    <button id="ping">Ping</button>
+    <button id="invalid" class="secondary">Invalid command</button>
+    <button id="burst" class="secondary">Queue two before ready</button>
+    <button id="dispose" class="secondary">Dispose host</button>
+    <pre id="log" aria-live="polite"></pre>
+  </section>
+</main>
+<script type="module">
+  import { DeucarianCommandHost } from "./deucarian-command-host.js";
+
+  const frame = document.querySelector("#viewer");
+  const output = document.querySelector("#log");
+  const viewerUrl = new URLSearchParams(location.search).get("viewer") ||
+    "http://localhost:8080/";
+  const target = new URL(viewerUrl);
+  frame.src = target.href;
+  const host = new DeucarianCommandHost({
+    transportId: "sample",
+    targetWindow: frame.contentWindow,
+    targetOrigin: target.origin
+  });
+  const log = value => {
+    output.textContent += JSON.stringify(value, null, 2) + "\n";
+    output.scrollTop = output.scrollHeight;
+  };
+  host.on("deucarian-command-ready", log);
+  host.on("deucarian-command-response", log);
+  host.on("deucarian-command-event", log);
+  host.start();
+
+  let sequence = 0;
+  const command = name => ({
+    protocol_version: 1,
+    command_id: `harness-${++sequence}`,
+    command: name,
+    payload: {}
+  });
+  document.querySelector("#ping").onclick = () => host.sendCommand(command("ping"));
+  document.querySelector("#invalid").onclick = () => host.sendCommand(command("not_registered"));
+  document.querySelector("#burst").onclick = () => {
+    host.sendCommand(command("ping"));
+    host.sendCommand(command("ping"));
+  };
+  document.querySelector("#dispose").onclick = () => {
+    host.dispose();
+    log({ disposed: true });
+  };
+</script>
+</body>
+</html>

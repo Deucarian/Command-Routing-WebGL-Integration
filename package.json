@@ -1,0 +1,28 @@
+{
+  "name": "com.deucarian.command-routing.webgl-integration",
+  "version": "0.1.0",
+  "displayName": "Deucarian Command Routing WebGL Integration",
+  "description": "Secure direct-page and iframe browser transport for Deucarian Command Routing.",
+  "unity": "2021.3",
+  "license": "MIT",
+  "author": { "name": "Deucarian" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Deucarian/Command-Routing-WebGL-Integration.git"
+  },
+  "keywords": ["deucarian", "commands", "webgl", "browser", "postmessage"],
+  "dependencies": {
+    "com.deucarian.command-routing": "0.1.0",
+    "com.deucarian.diagnostics": "0.1.4",
+    "com.deucarian.editor": "1.0.5",
+    "com.deucarian.logging": "1.0.2",
+    "com.unity.nuget.newtonsoft-json": "3.2.2"
+  },
+  "samples": [
+    {
+      "displayName": "WebGL Command Host",
+      "description": "A transport composition sample and browser host harness.",
+      "path": "Samples~/WebGL Command Host"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "packageId": "com.deucarian.command-routing.webgl-integration",
+  "displayName": "Deucarian Command Routing WebGL Integration",
+  "samplePolicy": "compiled-example",
+  "operationalPackage": true,
+  "ownedCapabilities": ["command-routing-webgl-transport"],
+  "runtimeAssemblies": ["Deucarian.CommandRouting.WebGLIntegration"],
+  "editorAssemblies": ["Deucarian.CommandRouting.WebGLIntegration.Editor"],
+  "sampleAssemblies": ["Deucarian.CommandRouting.WebGLIntegration.Samples.Host"],
+  "testAssemblies": ["Deucarian.CommandRouting.WebGLIntegration.Tests"],
+  "requiredDependencies": [
+    "com.deucarian.command-routing",
+    "com.deucarian.diagnostics",
+    "com.deucarian.editor",
+    "com.deucarian.logging",
+    "com.unity.nuget.newtonsoft-json"
+  ],
+  "optionalVersionDefinedDependencies": [],
+  "allowedDirectDebugCalls": [],
+  "allowedDirectUnityObjectLifetimeCalls": [],
+  "expectedSamplesRoot": "Samples~"
+}
