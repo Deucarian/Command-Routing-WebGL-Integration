@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
+import { DeucarianCommandHost } from "../deucarian-command-host.js";
 
 class FakeWindow {
   constructor() {
@@ -16,7 +17,10 @@ class FakeWindow {
   removeEventListener(type, listener) {
     if (this.listeners.get(type) === listener) this.listeners.delete(type);
   }
-  dispatchEvent() { }
+  dispatchEvent(event) {
+    this.listeners.get(event.type)?.(event);
+    return true;
+  }
 }
 
 function command(generation, hostSession, message) {
@@ -139,6 +143,81 @@ test("jslib enforces origin, generation, size, lifecycle, and cleanup", async ()
   assert.equal(
     library.DeucarianWebGlCommandGetParentOrigin(),
     "https://host.example");
+});
+
+test("real direct-page host delivers a command through the jslib to Unity", async () => {
+  const source = await readFile(
+    new URL("../../Runtime/Plugins/WebGL/DeucarianCommandRoutingWebGL.jslib", import.meta.url),
+    "utf8");
+  const fakeWindow = new FakeWindow();
+  const received = [];
+  const library = {};
+  const strings = new Map();
+  let pointer = 1;
+  const ptr = value => { const id = pointer++; strings.set(id, value); return id; };
+  class DirectCustomEvent {
+    constructor(type, options = {}) {
+      this.type = type;
+      this.detail = options.detail;
+    }
+  }
+  const previousCustomEvent = globalThis.CustomEvent;
+  globalThis.CustomEvent = DirectCustomEvent;
+
+  try {
+    vm.runInContext(source, vm.createContext({
+      window: fakeWindow,
+      document: { referrer: "" },
+      URL,
+      CustomEvent: DirectCustomEvent,
+      JSON,
+      Object,
+      setTimeout,
+      LibraryManager: { library },
+      mergeInto: (target, additions) => Object.assign(target, additions),
+      UTF8ToString: id => strings.get(id),
+      stringToNewUTF8: value => value,
+      SendMessage: (...args) => received.push(args)
+    }));
+
+    library.DeucarianWebGlCommandInstall(ptr(JSON.stringify({
+      transport_id: "viewer",
+      mode: "direct_page",
+      allowed_origins: [],
+      target_origin: "",
+      receiver_object: "Receiver",
+      receiver_method: "Receive",
+      maximum_message_characters: 4096
+    })));
+
+    const host = new DeucarianCommandHost({
+      transportId: "viewer",
+      hostWindow: fakeWindow
+    });
+    host.start();
+    library.DeucarianWebGlCommandNotifyReady(ptr("viewer"));
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    assert.equal(host.isReady, true);
+    assert.equal(host.sendCommand({
+      protocol_version: 1,
+      command_id: "direct-command-1",
+      command: "initialize_viewer",
+      payload: { project_id: 7 }
+    }), true);
+    assert.equal(received.length, 1);
+    assert.equal(received[0][0], "Receiver");
+    assert.equal(received[0][1], "Receive");
+    const delivered = JSON.parse(received[0][2]);
+    assert.equal(delivered.remote_endpoint, "direct");
+    assert.equal(delivered.connection_generation, 1);
+    assert.equal(JSON.parse(delivered.message).command, "initialize_viewer");
+
+    host.dispose();
+    library.DeucarianWebGlCommandUninstall(ptr("viewer"));
+  } finally {
+    globalThis.CustomEvent = previousCustomEvent;
+  }
 });
 
 test("reinstall uses a newer connection generation and cancels old ready", async () => {

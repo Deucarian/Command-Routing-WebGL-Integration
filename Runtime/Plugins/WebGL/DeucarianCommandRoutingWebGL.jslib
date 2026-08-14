@@ -133,7 +133,7 @@ mergeInto(LibraryManager.library, {
         if (!data || data.source !== "deucarian-command-host" ||
             data.type !== "deucarian-command" ||
             data.transport_id !== configuration.transport_id) return;
-        if (!validateGeneration(data, "direct")) return;
+        if (!validateConnection(data, "direct")) return;
         deliver(data, "direct");
       };
       probeListener = function (event) {
