@@ -54,6 +54,78 @@ namespace Deucarian.CommandRouting.WebGLIntegration.Tests
         }
 
         [Test]
+        public void DisposeBeforeStartIsTerminalWithoutInstallingBrowserState()
+        {
+            var browser = new RecordingBrowserInterop();
+            var transport = new WebGlCommandTransport(
+                new WebGlCommandTransportOptions("viewer"),
+                browser);
+
+            transport.Dispose();
+            transport.Dispose();
+
+            Assert.That(browser.InstallCount, Is.Zero);
+            Assert.That(browser.UninstallCount, Is.Zero);
+            Assert.Throws<ObjectDisposedException>(() => transport.Start());
+        }
+
+        [Test]
+        public void Start_RollsBackBrowserStateWhenReadyNotificationFails()
+        {
+            var browser = new RecordingBrowserInterop { ThrowOnReady = true };
+            var transport = new WebGlCommandTransport(
+                new WebGlCommandTransportOptions("viewer"),
+                browser);
+
+            Assert.Throws<InvalidOperationException>(() => transport.Start());
+            Assert.That(transport.IsRunning, Is.False);
+            Assert.That(browser.InstallCount, Is.EqualTo(1));
+            Assert.That(browser.UninstallCount, Is.EqualTo(1));
+
+            browser.ThrowOnReady = false;
+            transport.Start();
+            Assert.That(transport.IsRunning, Is.True);
+            transport.Dispose();
+        }
+
+        [Test]
+        public void Stop_RemainsRetryableWhenBrowserUninstallFails()
+        {
+            var browser = new RecordingBrowserInterop();
+            var transport = new WebGlCommandTransport(
+                new WebGlCommandTransportOptions("viewer"),
+                browser);
+            transport.Start();
+            browser.ThrowOnUninstall = true;
+
+            Assert.Throws<InvalidOperationException>(() => transport.Stop());
+            Assert.That(transport.IsRunning, Is.True);
+
+            browser.ThrowOnUninstall = false;
+            transport.Stop();
+            Assert.That(transport.IsRunning, Is.False);
+            transport.Dispose();
+        }
+
+        [Test]
+        public void Dispose_IsTerminalEvenWhenBrowserUninstallFails()
+        {
+            var browser = new RecordingBrowserInterop();
+            var transport = new WebGlCommandTransport(
+                new WebGlCommandTransportOptions("viewer"),
+                browser);
+            transport.Start();
+            browser.ThrowOnUninstall = true;
+
+            Assert.Throws<InvalidOperationException>(() => transport.Dispose());
+            Assert.That(transport.IsRunning, Is.False);
+            Assert.Throws<ObjectDisposedException>(() => transport.Start());
+
+            browser.ThrowOnUninstall = false;
+            Assert.DoesNotThrow(() => transport.Dispose());
+        }
+
+        [Test]
         public void Receive_RejectsWrongTransportAndStopsDelivery()
         {
             var browser = new RecordingBrowserInterop();
@@ -132,14 +204,30 @@ namespace Deucarian.CommandRouting.WebGLIntegration.Tests
             public int UninstallCount { get; private set; }
             public int ReadyCount { get; private set; }
             public List<string> Events { get; } = new List<string>();
+            public bool ThrowOnReady { get; set; }
+            public bool ThrowOnUninstall { get; set; }
             public void Install(string configurationJson) { InstallCount++; }
-            public void Uninstall(string transportId) { UninstallCount++; }
+            public void Uninstall(string transportId)
+            {
+                UninstallCount++;
+                if (ThrowOnUninstall)
+                {
+                    throw new InvalidOperationException("uninstall failed");
+                }
+            }
             public void Send(string transportId, string message, string remoteEndpoint) { }
             public void SendEvent(string transportId, string eventName, string payloadJson, string remoteEndpoint)
             {
                 Events.Add(eventName + ":" + payloadJson);
             }
-            public void NotifyReady(string transportId) { ReadyCount++; }
+            public void NotifyReady(string transportId)
+            {
+                ReadyCount++;
+                if (ThrowOnReady)
+                {
+                    throw new InvalidOperationException("ready failed");
+                }
+            }
         }
     }
 }

@@ -40,12 +40,34 @@ namespace Deucarian.CommandRouting.WebGLIntegration
             {
                 ThrowIfDisposed();
                 if (running) return;
-                browser.Install(CreateConfigurationJson());
+
+                try
+                {
+                    browser.Install(CreateConfigurationJson());
+                    browser.NotifyReady(options.TransportId);
+                }
+                catch (Exception startException)
+                {
+                    diagnostics.SetRunning(false);
+                    try
+                    {
+                        browser.Uninstall(options.TransportId);
+                    }
+                    catch (Exception rollbackException)
+                    {
+                        throw new AggregateException(
+                            "WebGL transport startup and browser rollback both failed.",
+                            startException,
+                            rollbackException);
+                    }
+
+                    throw;
+                }
+
                 running = true;
                 diagnostics.SetRunning(true);
             }
 
-            browser.NotifyReady(options.TransportId);
             Log.Info("WebGL command transport started. Payloads are omitted.");
         }
 
@@ -54,8 +76,8 @@ namespace Deucarian.CommandRouting.WebGLIntegration
             lock (sync)
             {
                 if (!running) return;
-                running = false;
                 browser.Uninstall(options.TransportId);
+                running = false;
                 diagnostics.SetRunning(false);
             }
 
@@ -166,14 +188,28 @@ namespace Deucarian.CommandRouting.WebGLIntegration
 
         public void Dispose()
         {
+            bool uninstall;
             lock (sync)
             {
                 if (disposed) return;
+                disposed = true;
+                uninstall = running;
+                running = false;
+                diagnostics.SetRunning(false);
             }
 
-            Stop();
-            lock (sync) { disposed = true; }
-            diagnosticsRegistration.Dispose();
+            try
+            {
+                if (uninstall)
+                {
+                    browser.Uninstall(options.TransportId);
+                    Log.Info("WebGL command transport stopped during disposal.");
+                }
+            }
+            finally
+            {
+                diagnosticsRegistration.Dispose();
+            }
         }
 
         private string CreateConfigurationJson()

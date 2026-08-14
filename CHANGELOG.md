@@ -7,3 +7,10 @@
   diagnostics, editor configuration, tests, and a browser harness.
 - Deferred the transport-ready signal until bridge startup completes and
   suppressed stale notifications after stop, dispose, or replacement.
+- Added terminal dispose-before-start semantics, connection generations,
+  downtime queue replay, explicit oversize/stale errors, and executable coverage
+  of the complete browser host API.
+- Added a source/origin-validated readiness probe for host recreation after the
+  Unity transport is already running.
+- Added per-document host sessions so iframe navigation can safely restart at
+  generation 1 and stale responses/events/errors are rejected.

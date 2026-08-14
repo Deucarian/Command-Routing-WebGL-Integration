@@ -42,7 +42,7 @@
   frame.src = target.href;
   const host = new DeucarianCommandHost({
     transportId: "sample",
-    targetWindow: frame.contentWindow,
+    iframe: frame,
     targetOrigin: target.origin
   });
   const log = value => {
@@ -50,8 +50,10 @@
     output.scrollTop = output.scrollHeight;
   };
   host.on("deucarian-command-ready", log);
+  host.on("deucarian-command-unavailable", log);
   host.on("deucarian-command-response", log);
   host.on("deucarian-command-event", log);
+  host.on("deucarian-command-error", log);
   host.start();
 
   let sequence = 0;

@@ -4,19 +4,19 @@ using System.Runtime.InteropServices;
 namespace Deucarian.CommandRouting.WebGLIntegration
 {
     /// <summary>
-    /// Resolves the exact parent origin supplied by the browser referrer.
-    /// A missing/suppressed referrer is rejected instead of widening trust.
+    /// Development-only convenience for local harnesses. Production embedding
+    /// must supply a deployment-controlled exact origin allowlist.
     /// </summary>
     public static class WebGlEmbeddingContext
     {
-#if UNITY_WEBGL && !UNITY_EDITOR
+#if UNITY_WEBGL && !UNITY_EDITOR && DEVELOPMENT_BUILD
         [DllImport("__Internal")]
         private static extern string DeucarianWebGlCommandGetParentOrigin();
 #endif
 
-        public static bool TryGetParentOrigin(out string origin)
+        public static bool TryGetDevelopmentParentOrigin(out string origin)
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
+#if UNITY_WEBGL && !UNITY_EDITOR && DEVELOPMENT_BUILD
             string candidate = DeucarianWebGlCommandGetParentOrigin();
 #else
             string candidate = string.Empty;
@@ -31,6 +31,13 @@ namespace Deucarian.CommandRouting.WebGLIntegration
                 origin = string.Empty;
                 return false;
             }
+        }
+
+        [Obsolete(
+            "Referrer-origin inference is development-only. Configure production origins explicitly.")]
+        public static bool TryGetParentOrigin(out string origin)
+        {
+            return TryGetDevelopmentParentOrigin(out origin);
         }
     }
 }

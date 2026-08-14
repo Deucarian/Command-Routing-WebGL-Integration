@@ -15,6 +15,13 @@ endpoint.
   listener and endpoint table.
 - A `deucarian-command-ready` transport handshake tells hosts when queued
   commands may flush. Application readiness remains an application event.
+- Connection generations reset readiness across transport replacement and iframe
+  reload. Commands queued during known downtime replay only after the newer ready
+  handshake; oversize/stale messages receive explicit error events.
+- The canonical host probes an already-running transport during start/reconnect,
+  so a late-attaching host cannot permanently miss the ready handshake.
+- Referrer-origin inference is available only in development WebGL builds.
+  Production applications must provide an exact deployment-controlled allowlist.
 - Payload contents, credentials, and exception text are never logged or exposed
   through diagnostics.
 
