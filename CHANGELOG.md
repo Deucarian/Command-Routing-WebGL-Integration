@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.1] - 2026-08-14
+
+- Pinned the retryable, exception-safe Command Routing bridge lifecycle used by
+  browser transport hosts during Stop and Dispose.
+
 ## [0.1.0] - 2026-08-14
 
 - Added secure direct-page and iframe transports for Command Routing.

@@ -1,6 +1,6 @@
 {
   "name": "com.deucarian.command-routing.webgl-integration",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "Deucarian Command Routing WebGL Integration",
   "description": "Secure direct-page and iframe browser transport for Deucarian Command Routing.",
   "unity": "2021.3",
@@ -12,7 +12,7 @@
   },
   "keywords": ["deucarian", "commands", "webgl", "browser", "postmessage"],
   "dependencies": {
-    "com.deucarian.command-routing": "0.1.0",
+    "com.deucarian.command-routing": "0.1.1",
     "com.deucarian.diagnostics": "0.1.4",
     "com.deucarian.editor": "1.0.5",
     "com.deucarian.logging": "1.0.2",
