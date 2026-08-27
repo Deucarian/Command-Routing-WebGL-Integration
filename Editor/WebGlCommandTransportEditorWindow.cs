@@ -34,8 +34,7 @@ namespace Deucarian.CommandRouting.WebGLIntegration.Editor
                 DrawContract();
                 DrawDiagnostics();
                 DeucarianEditorChrome.DrawFooterVersion(
-                    "com.deucarian.command-routing.webgl-integration",
-                    "0.1.0");
+                    "com.deucarian.command-routing.webgl-integration");
                 EditorGUILayout.EndScrollView();
             }
         }

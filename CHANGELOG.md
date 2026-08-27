@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2] - 2026-08-26
+
+- Derived the editor workflow footer from installed package metadata instead
+  of a hardcoded package version.
+- Updated exact Command Routing, Diagnostics, Editor, and Logging dependencies
+  for the coordinated editor UX release.
+
 ## [0.1.1] - 2026-08-14
 
 - Pinned the retryable, exception-safe Command Routing bridge lifecycle used by
