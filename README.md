@@ -6,6 +6,8 @@ protocol. Canonical Command Routing envelopes enter from either a directly
 embedded page or an iframe parent; encoded results return to the originating
 endpoint.
 
+Open **Deucarian Control Center > Communication > WebGL Command Transport** for the package workflow.
+
 ## Security and lifecycle
 
 - Iframe mode accepts only exact configured HTTP(S) origins and only the parent
