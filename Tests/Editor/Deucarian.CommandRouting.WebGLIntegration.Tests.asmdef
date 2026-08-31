@@ -2,8 +2,11 @@
   "name": "Deucarian.CommandRouting.WebGLIntegration.Tests",
   "rootNamespace": "Deucarian.CommandRouting.WebGLIntegration.Tests",
   "references": [
+    "Deucarian.Editor",
+    "Deucarian.CommandRouting.WebGLIntegration.Editor",
     "Deucarian.CommandRouting",
     "Deucarian.CommandRouting.WebGLIntegration",
+    "Deucarian.Diagnostics",
     "Newtonsoft.Json"
   ],
   "includePlatforms": ["Editor"],

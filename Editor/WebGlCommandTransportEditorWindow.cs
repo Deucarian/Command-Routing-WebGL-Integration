@@ -8,12 +8,8 @@ namespace Deucarian.CommandRouting.WebGLIntegration.Editor
 {
     public sealed class WebGlCommandTransportEditorWindow : EditorWindow
     {
-        public const string MenuPath =
-            "Tools/Deucarian/Communication/WebGL Command Transport";
-
         private Vector2 scrollPosition;
 
-        [MenuItem(MenuPath, priority = 321)]
         public static void Open()
         {
             var window = GetWindow<WebGlCommandTransportEditorWindow>("WebGL Commands");
