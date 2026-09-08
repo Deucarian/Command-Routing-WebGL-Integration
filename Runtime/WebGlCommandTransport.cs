@@ -214,16 +214,27 @@ namespace Deucarian.CommandRouting.WebGLIntegration
 
         private string CreateConfigurationJson()
         {
-            return JsonConvert.SerializeObject(new
+            // Build the wire object explicitly: IL2CPP can strip the property
+            // getters of anonymous objects that only a serializer discovers.
+            var allowedOrigins = new JArray();
+            for (int i = 0; i < options.AllowedOrigins.Count; i++)
             {
-                transport_id = options.TransportId,
-                mode = options.Mode == WebGlCommandTransportMode.ParentIframe ? "parent_iframe" : "direct_page",
-                allowed_origins = options.AllowedOrigins,
-                target_origin = options.TargetOrigin,
-                receiver_object = WebGlCommandTransportBehaviour.GameObjectName(options.TransportId),
-                receiver_method = nameof(WebGlCommandTransportBehaviour.ReceiveBrowserMessage),
-                maximum_message_characters = options.MaximumMessageCharacters
-            });
+                allowedOrigins.Add(options.AllowedOrigins[i]);
+            }
+
+            return new JObject
+            {
+                ["transport_id"] = options.TransportId,
+                ["mode"] = options.Mode == WebGlCommandTransportMode.ParentIframe
+                    ? "parent_iframe" : "direct_page",
+                ["allowed_origins"] = allowedOrigins,
+                ["target_origin"] = options.TargetOrigin,
+                ["receiver_object"] =
+                    WebGlCommandTransportBehaviour.GameObjectName(options.TransportId),
+                ["receiver_method"] =
+                    nameof(WebGlCommandTransportBehaviour.ReceiveBrowserMessage),
+                ["maximum_message_characters"] = options.MaximumMessageCharacters
+            }.ToString(Formatting.None);
         }
 
         private bool IsExpectedEndpoint(string remoteEndpoint)

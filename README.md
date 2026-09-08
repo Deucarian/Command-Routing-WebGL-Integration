@@ -26,6 +26,10 @@ Open **Deucarian Control Center > Communication > WebGL Command Transport** for 
   Production applications must provide an exact deployment-controlled allowlist.
 - Payload contents, credentials, and exception text are never logged or exposed
   through diagnostics.
+- Browser installation uses explicit JSON tokens for all seven wire fields;
+  it does not rely on anonymous-object property getters surviving IL2CPP
+  stripping. Invalid configuration is rejected before listener registration
+  or replacement of an existing transport.
 
 ## Composition
 
@@ -48,3 +52,23 @@ commands.
 
 The sample contains no credentials. Hosts must deliver tokens through an
 application command after the handshake, never through a query string.
+
+## Validation
+
+Run the Package Registry validator, Unity EditMode filter
+`Deucarian.CommandRouting.WebGLIntegration.Tests`, and `npm test` in `Browser~`.
+The startup tests verify exact wire fields in both transport modes and reject
+reflection-based configuration mapping. Browser tests execute the actual
+`.jslib` and retain origin, generation, deferred-ready, and cleanup coverage.
+
+After a full IL2CPP player build, run this read-only PowerShell 7 audit against
+the final stripped assembly:
+
+```powershell
+pwsh -File Tools~/Test-StrippedTransportConfiguration.ps1 -AssemblyPath <project>/Library/Bee/artifacts/WebGL/ManagedStripped/Deucarian.CommandRouting.WebGLIntegration.dll
+```
+
+The audit checks the actual retained method body for all seven direct wire-field
+writes and rejects object mapping. It complements the required player smoke
+test: a matching transport-ready handshake must reach the host and allow a
+command to be delivered. Editor tests alone do not prove stripping safety.
