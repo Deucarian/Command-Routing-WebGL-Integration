@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.5] - 2026-09-09
+
+- Register package tooling and navigation actions as shared Control Center pages. Preserve the domain workflow while using Editor-owned submenus, in-window navigation, and UI scaling.
+
 ## [0.1.4] - 2026-09-08
 
 - Write all browser transport configuration fields explicitly so IL2CPP

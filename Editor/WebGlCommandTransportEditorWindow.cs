@@ -12,10 +12,13 @@ namespace Deucarian.CommandRouting.WebGLIntegration.Editor
 
         public static void Open()
         {
-            var window = GetWindow<WebGlCommandTransportEditorWindow>("WebGL Commands");
+            var window = DeucarianEditorWindowPages.GetStandalone<WebGlCommandTransportEditorWindow>("WebGL Commands");
             window.minSize = new Vector2(560f, 430f);
             window.Show();
         }
+
+        public static IDeucarianEditorPage CreatePage() =>
+            DeucarianEditorImGuiPage.Create<WebGlCommandTransportEditorWindow>(DeucarianToolIds.CommandRoutingWebGl, window => window.OnGUI());
 
         private void OnGUI()
         {
