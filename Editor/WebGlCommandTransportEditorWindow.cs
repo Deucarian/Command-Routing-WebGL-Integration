@@ -23,16 +23,16 @@ namespace Deucarian.CommandRouting.WebGLIntegration.Editor
         private void OnGUI()
         {
             using (DeucarianEditorWorkbenchPanelScope page =
-                   DeucarianEditorWorkbenchGUI.BeginSettingsPage(GUILayout.ExpandHeight(true)))
+                   DeucarianEditorWorkbenchGUI.BeginSettingsPage(this, GUILayout.ExpandHeight(true)))
             {
                 scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-                DeucarianEditorChrome.DrawPackageHeader(
+                DeucarianEditorChrome.DrawPackageHeader(this,
                     "network",
                     "WebGL Command Transport",
                     "Secure browser transport for Deucarian Command Routing.");
                 DrawContract();
                 DrawDiagnostics();
-                DeucarianEditorChrome.DrawFooterVersion(
+                DeucarianEditorChrome.DrawFooterVersion(this,
                     "com.deucarian.command-routing.webgl-integration");
                 EditorGUILayout.EndScrollView();
             }
@@ -42,11 +42,11 @@ namespace Deucarian.CommandRouting.WebGLIntegration.Editor
         {
             DeucarianEditorChrome.DrawSectionHeader("Embedding contract");
             DeucarianEditorChrome.BeginSection();
-            EditorGUILayout.LabelField(
+            DeucarianEditorTextGUI.LabelField(
                 "Direct-page builds use CustomEvent. Iframe builds require an exact " +
                 "allowed parent origin, validate the parent source window, and send to " +
                 "that exact origin. Wildcard origins are rejected by runtime options.",
-                EditorStyles.wordWrappedLabel);
+                DeucarianEditorWorkbenchGUI.LabelStyle);
             DeucarianEditorWorkbenchGUI.DrawStatusIconRow(
                 "shield-check",
                 "Payloads are never written to logs or Diagnostics.",
@@ -70,16 +70,16 @@ namespace Deucarian.CommandRouting.WebGLIntegration.Editor
 
             if (matching.Count == 0)
             {
-                EditorGUILayout.HelpBox(
+                DeucarianEditorTextGUI.HelpBox(
                     "No WebGL command transport is currently registered.",
                     MessageType.Info);
             }
             foreach (DiagnosticSection section in matching)
             {
-                EditorGUILayout.LabelField(section.Title, EditorStyles.boldLabel);
+                DeucarianEditorTextGUI.LabelField(section.Title, DeucarianEditorWorkbenchGUI.BoldLabelStyle);
                 foreach (DiagnosticItem item in section.Items)
                 {
-                    EditorGUILayout.LabelField(item.Label, item.Value);
+                    DeucarianEditorTextGUI.LabelField(item.Label, item.Value);
                 }
             }
             DeucarianEditorChrome.EndSection();
