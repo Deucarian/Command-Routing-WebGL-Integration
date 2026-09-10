@@ -1,13 +1,85 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using NUnit.Framework;
 
 namespace Deucarian.CommandRouting.WebGLIntegration.Tests
 {
     public sealed class WebGlCommandTransportTests
     {
+        [Test]
+        public void Start_DoesNotDiscoverConfigurationMembersThroughReflection()
+        {
+            Func<JsonSerializerSettings> previous = JsonConvert.DefaultSettings;
+            try
+            {
+                JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+                {
+                    ContractResolver = new RejectObjectMappingResolver()
+                };
+                var browser = new RecordingBrowserInterop();
+                using (var transport = new WebGlCommandTransport(
+                           new WebGlCommandTransportOptions("viewer"), browser))
+                {
+                    Assert.DoesNotThrow(() => transport.Start());
+                    Assert.That((string)JObject.Parse(browser.ConfigurationJson)
+                        ["transport_id"], Is.EqualTo("viewer"));
+                }
+            }
+            finally
+            {
+                JsonConvert.DefaultSettings = previous;
+            }
+        }
+
+        [TestCase(WebGlCommandTransportMode.DirectPage)]
+        [TestCase(WebGlCommandTransportMode.ParentIframe)]
+        public void Start_InstallsEveryWireFieldBeforeNotifyingReady(
+            WebGlCommandTransportMode mode)
+        {
+            const string id = "viewer\"\\escaped";
+            var origins = mode == WebGlCommandTransportMode.ParentIframe
+                ? new[] { "https://host.example", "https://other.example" }
+                : Array.Empty<string>();
+            var browser = new RecordingBrowserInterop();
+            using (var transport = new WebGlCommandTransport(
+                       new WebGlCommandTransportOptions(
+                           id, mode, origins,
+                           mode == WebGlCommandTransportMode.ParentIframe
+                               ? origins[0] : null,
+                           4096),
+                       browser))
+            {
+                transport.Start();
+                JObject configuration = JObject.Parse(browser.ConfigurationJson);
+                Assert.That(configuration.Count, Is.EqualTo(7));
+                Assert.That((string)configuration["transport_id"], Is.EqualTo(id));
+                Assert.That((string)configuration["mode"], Is.EqualTo(
+                    mode == WebGlCommandTransportMode.ParentIframe
+                        ? "parent_iframe" : "direct_page"));
+                Assert.That(configuration["allowed_origins"].Type,
+                    Is.EqualTo(JTokenType.Array));
+                CollectionAssert.AreEqual(origins,
+                    configuration["allowed_origins"].Values<string>());
+                Assert.That((string)configuration["target_origin"], Is.EqualTo(
+                    mode == WebGlCommandTransportMode.ParentIframe
+                        ? origins[0] : string.Empty));
+                Assert.That((string)configuration["receiver_object"],
+                    Is.EqualTo("DeucarianWebGlTransport-" + id));
+                Assert.That((string)configuration["receiver_method"],
+                    Is.EqualTo("ReceiveBrowserMessage"));
+                Assert.That(configuration["maximum_message_characters"].Type,
+                    Is.EqualTo(JTokenType.Integer));
+                Assert.That((int)configuration["maximum_message_characters"],
+                    Is.EqualTo(4096));
+                Assert.That(browser.ReadyTransportId,
+                    Is.EqualTo((string)configuration["transport_id"]));
+            }
+        }
+
         [Test]
         public void Options_RequireExactIframeOrigins()
         {
@@ -198,6 +270,15 @@ namespace Deucarian.CommandRouting.WebGLIntegration.Tests
             }
         }
 
+        private sealed class RejectObjectMappingResolver : DefaultContractResolver
+        {
+            public override JsonContract ResolveContract(Type type)
+            {
+                throw new InvalidOperationException(
+                    "Transport configuration must not reflect over object members.");
+            }
+        }
+
         private sealed class RecordingBrowserInterop : IWebGlCommandBrowserInterop
         {
             public int InstallCount { get; private set; }
@@ -206,7 +287,13 @@ namespace Deucarian.CommandRouting.WebGLIntegration.Tests
             public List<string> Events { get; } = new List<string>();
             public bool ThrowOnReady { get; set; }
             public bool ThrowOnUninstall { get; set; }
-            public void Install(string configurationJson) { InstallCount++; }
+            public string ConfigurationJson { get; private set; }
+            public string ReadyTransportId { get; private set; }
+            public void Install(string configurationJson)
+            {
+                ConfigurationJson = configurationJson;
+                InstallCount++;
+            }
             public void Uninstall(string transportId)
             {
                 UninstallCount++;
@@ -222,6 +309,9 @@ namespace Deucarian.CommandRouting.WebGLIntegration.Tests
             }
             public void NotifyReady(string transportId)
             {
+                Assert.That(ConfigurationJson, Is.Not.Null,
+                    "Browser configuration must be installed before readiness.");
+                ReadyTransportId = transportId;
                 ReadyCount++;
                 if (ThrowOnReady)
                 {

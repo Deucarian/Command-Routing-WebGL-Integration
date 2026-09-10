@@ -25,7 +25,7 @@ namespace Deucarian.CommandRouting.WebGLIntegration.Editor
                     WebGlCommandTransportEditorWindow.Open,
                     PackageId,
                     searchTerms: new[] { "webgl", "browser", "iframe", "transport" },
-                    order: 110));
+                    order: 110, createPage: WebGlCommandTransportEditorWindow.CreatePage));
 
             CardRegistration = DeucarianControlCenterRegistry.RegisterCardProvider(
                 new WebGlTransportCardProvider());
@@ -68,7 +68,7 @@ namespace Deucarian.CommandRouting.WebGLIntegration.Editor
                             new DeucarianControlCenterAction(
                                 PackageId + ".open",
                                 "Open WebGL Transport",
-                                WebGlCommandTransportEditorWindow.Open)
+                                WebGlCommandTransportEditorWindow.Open, navigationToolId: DeucarianToolIds.CommandRoutingWebGl)
                         },
                         searchTerms: new[]
                         {

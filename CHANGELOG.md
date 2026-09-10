@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.6] - 2026-09-09
+
+### Changed
+
+- Adopt the shared Editor 1.7 workspace presentation: neutral surfaces, readable typography, consistent actions and aligned controls.
+- Preserve package workflows and native serialized editing; this is an editor-only presentation update.
+
+## [0.1.5] - 2026-09-09
+
+- Register package tooling and navigation actions as shared Control Center pages. Preserve the domain workflow while using Editor-owned submenus, in-window navigation, and UI scaling.
+
+## [0.1.4] - 2026-09-08
+
+- Write all browser transport configuration fields explicitly so IL2CPP
+  stripping cannot turn startup configuration into an empty JSON object.
+- Reject incomplete browser installation configuration before replacing a
+  working transport or registering listeners.
+- Cover exact direct-page/iframe wire fields and malformed startup rejection
+  alongside the existing handshake, origin, generation, and lifecycle tests.
+
 ## [0.1.3] - 2026-08-31
 
 - Registered the package workflow and a bounded, sanitized local-state card with Deucarian Control Center.
