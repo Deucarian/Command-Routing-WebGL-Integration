@@ -11,6 +11,25 @@ mergeInto(LibraryManager.library, {
 
   DeucarianWebGlCommandInstall: function (configurationJsonPointer) {
     var configuration = JSON.parse(UTF8ToString(configurationJsonPointer));
+    function nonemptyString(value) {
+      return typeof value === "string" && value.trim().length > 0;
+    }
+    if (!configuration || typeof configuration !== "object" ||
+        !nonemptyString(configuration.transport_id) ||
+        (configuration.mode !== "direct_page" && configuration.mode !== "parent_iframe") ||
+        !Array.isArray(configuration.allowed_origins) ||
+        !configuration.allowed_origins.every(nonemptyString) ||
+        typeof configuration.target_origin !== "string" ||
+        !nonemptyString(configuration.receiver_object) ||
+        !nonemptyString(configuration.receiver_method) ||
+        !Number.isSafeInteger(configuration.maximum_message_characters) ||
+        configuration.maximum_message_characters <= 0 ||
+        (configuration.mode === "parent_iframe" &&
+          (!nonemptyString(configuration.target_origin) ||
+           configuration.target_origin === "*" ||
+           configuration.allowed_origins.indexOf(configuration.target_origin) < 0))) {
+      throw new Error("WebGL command transport configuration is incomplete or invalid.");
+    }
     var root = window.__deucarianCommandRouting ||
       (window.__deucarianCommandRouting = {
         transports: Object.create(null),
