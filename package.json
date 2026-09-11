@@ -1,6 +1,6 @@
 {
   "name": "com.deucarian.command-routing.webgl-integration",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "displayName": "Deucarian Command Routing WebGL Integration",
   "description": "Secure direct-page and iframe browser transport for Deucarian Command Routing.",
   "unity": "2021.3",
@@ -22,7 +22,7 @@
   "dependencies": {
     "com.deucarian.command-routing": "0.2.5",
     "com.deucarian.diagnostics": "0.1.6",
-    "com.deucarian.editor": "1.7.0",
+    "com.deucarian.editor": "1.10.6",
     "com.deucarian.logging": "1.0.4",
     "com.unity.nuget.newtonsoft-json": "3.2.2"
   },
