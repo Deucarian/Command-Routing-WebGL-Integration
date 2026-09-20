@@ -1,8 +1,8 @@
 {
   "channels": {
     "develop": {
-      "bitbucketCommit": "cfd6078ed8fdd293452632c34435acbe1b0a37e4",
-      "githubBaseline": "039a68122bc853585b8271eab6a8287be572a598"
+      "githubBaseline": "beb97c269933ce6711e32551eaeff59c41d2b5fd",
+      "bitbucketCommit": "4d0ebf74567f481faa508a463d0962fc2df0d62a"
     },
     "main": {
       "bitbucketCommit": "e7c2f9719ca2f9afa708e47a401ce5c08916aa7d",
