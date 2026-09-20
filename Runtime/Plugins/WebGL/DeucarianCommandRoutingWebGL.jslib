@@ -53,10 +53,10 @@ mergeInto(LibraryManager.library, {
       allowedOrigins[origin] = true;
     });
 
-    function emit(type, fields) {
+    function emit(type, fields, protocolOverride) {
       var current = root.transports[configuration.transport_id];
       if (!current || current.generation !== generation) return;
-      var protocol = current.protocol;
+      var protocol = protocolOverride || current.protocol;
       var outbound = Object.assign({
         source: protocol + "-command-transport",
         type: type.replace(/^deucarian-/, protocol + "-"),
@@ -259,6 +259,11 @@ mergeInto(LibraryManager.library, {
       transport.emit(
         "deucarian-command-ready",
         { ready_kind: "transport" });
+      // A host's first probe may predate transport installation. Announce both
+      // public dialects until a valid probe has selected the host's protocol.
+      if (!transport.hostSession) {
+        transport.emit("deucarian-command-ready", { ready_kind: "transport" }, "simultria");
+      }
     }, 0);
   }
 });
