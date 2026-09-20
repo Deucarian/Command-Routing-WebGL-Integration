@@ -56,9 +56,10 @@ mergeInto(LibraryManager.library, {
     function emit(type, fields) {
       var current = root.transports[configuration.transport_id];
       if (!current || current.generation !== generation) return;
+      var protocol = current.protocol;
       var outbound = Object.assign({
-        source: "deucarian-command-transport",
-        type: type,
+        source: protocol + "-command-transport",
+        type: type.replace(/^deucarian-/, protocol + "-"),
         transport_id: configuration.transport_id,
         connection_generation: generation,
         host_session: current.hostSession || null
@@ -66,7 +67,7 @@ mergeInto(LibraryManager.library, {
       if (configuration.mode === "parent_iframe") {
         window.parent.postMessage(outbound, configuration.target_origin);
       } else {
-        window.dispatchEvent(new CustomEvent(type, { detail: outbound }));
+        window.dispatchEvent(new CustomEvent(outbound.type, { detail: outbound }));
       }
     }
 
@@ -119,8 +120,17 @@ mergeInto(LibraryManager.library, {
         }));
     }
 
-    function validateConnection(data, endpoint) {
+    // Browser protocol names are a published embedding contract, independent
+    // of the Unity package's namespace. Negotiate the existing host's dialect.
+    function hostProtocol(data) {
+      if (data && data.source === "deucarian-command-host") return "deucarian";
+      if (data && data.source === "simultria-command-host") return "simultria";
+      return null;
+    }
+
+    function validateConnection(data, endpoint, protocol) {
       if (data.connection_generation === generation &&
+          protocol === transport.protocol &&
           data.host_session && data.host_session === transport.hostSession) return true;
       reject("stale_connection_generation", endpoint, readRequestId(data.message));
       return false;
@@ -131,47 +141,53 @@ mergeInto(LibraryManager.library, {
     if (configuration.mode === "parent_iframe") {
       listener = function (event) {
         var data = event.data;
+        var protocol = hostProtocol(data);
         if (event.source !== window.parent || !allowedOrigins[event.origin] ||
-            !data || data.source !== "deucarian-command-host" ||
+            !protocol ||
             data.transport_id !== configuration.transport_id) return;
-        if (data.type === "deucarian-command-probe") {
+        if (data.type === protocol + "-command-probe") {
           if (typeof data.host_session !== "string" || !data.host_session) return;
           transport.hostSession = data.host_session;
+          transport.protocol = protocol;
           if (transport.ready) emit("deucarian-command-ready", { ready_kind: "transport" });
           return;
         }
-        if (data.type !== "deucarian-command") return;
+        if (data.type !== protocol + "-command") return;
         var endpoint = "parent:" + event.origin;
-        if (!validateConnection(data, endpoint)) return;
+        if (!validateConnection(data, endpoint, protocol)) return;
         deliver(data, endpoint);
       };
       window.addEventListener("message", listener, false);
     } else {
       listener = function (event) {
         var data = event.detail;
-        if (!data || data.source !== "deucarian-command-host" ||
-            data.type !== "deucarian-command" ||
+        var protocol = hostProtocol(data);
+        if (!protocol || data.type !== protocol + "-command" ||
             data.transport_id !== configuration.transport_id) return;
-        if (!validateConnection(data, "direct")) return;
+        if (!validateConnection(data, "direct", protocol)) return;
         deliver(data, "direct");
       };
       probeListener = function (event) {
         var data = event.detail;
-        if (!data || data.source !== "deucarian-command-host" ||
-            data.type !== "deucarian-command-probe" ||
+        var protocol = hostProtocol(data);
+        if (!protocol || data.type !== protocol + "-command-probe" ||
             data.transport_id !== configuration.transport_id) return;
         if (typeof data.host_session !== "string" || !data.host_session) return;
         transport.hostSession = data.host_session;
+        transport.protocol = protocol;
         if (transport.ready) emit("deucarian-command-ready", { ready_kind: "transport" });
       };
       window.addEventListener("deucarian-command", listener, false);
       window.addEventListener("deucarian-command-probe", probeListener, false);
+      window.addEventListener("simultria-command", listener, false);
+      window.addEventListener("simultria-command-probe", probeListener, false);
     }
 
     var transport = {
       configuration: configuration,
       generation: generation,
       hostSession: null,
+      protocol: "deucarian",
       ready: false,
       emit: emit,
       notifyUnavailable: function (reason) {
@@ -183,6 +199,8 @@ mergeInto(LibraryManager.library, {
         } else {
           window.removeEventListener("deucarian-command", listener, false);
           window.removeEventListener("deucarian-command-probe", probeListener, false);
+          window.removeEventListener("simultria-command", listener, false);
+          window.removeEventListener("simultria-command-probe", probeListener, false);
         }
       }
     };
